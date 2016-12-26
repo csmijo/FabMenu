@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--fab-->
+    <dimen name="btg_fab_action_size">56dp</dimen>
+    <dimen name="btg_fab_menu_base_size">50dp</dimen>
+    <dimen name="btg_fab_menu_item_size">50dp</dimen>
+    <dimen name="btg_fab_menu_item_spacing">0dp</dimen>
+    <dimen name="btg_fab_menu_item_overshoot">15dp</dimen>
+    <dimen name="btg_fab_action_offset">8dp</dimen>
+</resources>

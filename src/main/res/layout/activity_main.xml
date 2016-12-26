@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!--<csmijo.com.floatmenu.view.FabMenu
+        android:id="@+id/fabMenu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@color/colorAccent">
+
+    </csmijo.com.floatmenu.view.FabMenu>-->
+
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="展开"
+        android:id="@+id/launch"
+        android:onClick="onLaunch"
+        android:layout_marginRight="30dp"
+        android:layout_marginEnd="30dp"
+        android:layout_alignParentBottom="true"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="折叠"
+        android:onClick="onFold"
+        android:layout_alignParentBottom="true"
+        android:layout_toRightOf="@+id/launch"
+        android:layout_toEndOf="@+id/launch"
+        android:id="@+id/button2"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="方向"
+        android:id="@+id/button"
+        android:layout_alignParentBottom="true"
+        android:layout_toRightOf="@+id/button2"
+        android:layout_toEndOf="@+id/button2"
+        android:layout_marginLeft="33dp"
+        android:layout_marginStart="33dp"
+        android:onClick="onChangeDir"/>
+</RelativeLayout>
