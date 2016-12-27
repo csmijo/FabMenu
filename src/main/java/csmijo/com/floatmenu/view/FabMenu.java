@@ -2,14 +2,17 @@ package csmijo.com.floatmenu.view;
 
 import android.animation.ObjectAnimator;
 import android.content.Context;
+import android.graphics.Color;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.animation.OvershootInterpolator;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -32,6 +35,11 @@ public class FabMenu extends ViewGroup {
     private int expectedHeight;    // 期望的height
 
     protected boolean mExpandStatus;     // true:launch;false:fold
+    protected int TOUCHSLOP; // 判断移动的最小距离
+    private Context mContext;
+
+    private float x1 = 0.0f;
+    private float y1 = 0.0f;
 
 
     public FabMenu(Context context) {
@@ -40,17 +48,20 @@ public class FabMenu extends ViewGroup {
 
     public FabMenu(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init();
+        init(context);
     }
 
-    private void init() {
+    private void init(Context context) {
+        this.mContext = context;
         this.expandDir = 0;
         this.mViewList = new ArrayList<>();
+        this.TOUCHSLOP = ViewConfiguration.get(context).getScaledTouchSlop();
         if (!isInEditMode()) {
             menuBaseSize = getResources().getDimensionPixelSize(R.dimen.btg_fab_menu_base_size);
             menuItemSpacing = getResources().getDimensionPixelOffset(R.dimen.btg_fab_menu_item_spacing);
             menuItemOvershot = getResources().getDimensionPixelOffset(R.dimen.btg_fab_menu_item_overshoot);
         }
+        this.setBackgroundColor(Color.RED);
 
     }
 
@@ -239,8 +250,53 @@ public class FabMenu extends ViewGroup {
     }
 
 
+
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        return super.onInterceptTouchEvent(ev);
+        int action = ev.getAction();
+        boolean consumeValue = false;
+       // Log.i("FabMenu", "onInterceptTouchEvent: switch outer "+x1+";"+y1);
+
+        switch (action & MotionEvent.ACTION_MASK) {
+            case MotionEvent.ACTION_DOWN:
+                x1 = ev.getRawX();
+                y1 = ev.getRawY() - getStatusBarHeight();
+               // Log.i("FabMenu", "onInterceptTouchEvent: action_down "+x1+";"+y1);
+                break;
+            case MotionEvent.ACTION_MOVE:
+                float x2 = ev.getRawX();
+                float y2 = ev.getRawY() - getStatusBarHeight();
+//                Log.i("FabMenu", "onInterceptTouchEvent: action_move "+x1+";"+y1);
+//                Log.i("FabMenu", "onInterceptTouchEvent: action_move "+x2+";"+y2);
+                if (Math.abs(x2 - x1) > TOUCHSLOP || Math.abs(y2 - y1) > TOUCHSLOP) {
+                    consumeValue = true;        // 滑动距离足够大，则截获touch事件，不让子view处理
+                    //Log.i("FabMenu", "onInterceptTouchEvent: action_move consume "+TOUCHSLOP);
+                }
+                break;
+            case MotionEvent.ACTION_UP:
+                break;
+        }
+        return consumeValue;
+    }
+
+    private int getStatusBarHeight() {
+        int statusBarHeight = 0;
+        try {
+            Class<?> c = Class.forName("com.android.internal.R$dimen");
+            Object o = c.newInstance();
+            Field field = c.getField("status_bar_height");
+            int x = (Integer) field.get(o);
+            statusBarHeight = mContext.getResources().getDimensionPixelSize(x);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+
+        return statusBarHeight;
     }
 }

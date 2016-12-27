@@ -5,7 +5,7 @@
     android:layout_height="wrap_content">
 
     <ImageView
-        android:id="@+id/fabButton"
+        android:id="@+id/fabBtnImgView"
         android:layout_width="@dimen/btg_fab_action_size"
         android:layout_height="@dimen/btg_fab_action_size"
         android:src="@drawable/btg_btn_fab"/>
