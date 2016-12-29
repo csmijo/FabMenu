@@ -1,13 +1,13 @@
 package csmijo.com.floatmenu.view;
 
+import android.animation.ObjectAnimator;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
-import android.support.annotation.RequiresApi;
-import android.view.LayoutInflater;
+import android.os.Handler;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import csmijo.com.floatmenu.R;
@@ -25,16 +25,22 @@ public class FabManager {
     private FabWindowManager mFabWindowManager;
     private boolean isOpen;  // menu是否展开
 
+    private Handler mHandler;
+
     public FabManager(Context context) {
         this.mContext = context;
         this.itemSize = mContext.getResources().getDimensionPixelSize(R.dimen.btg_fab_menu_item_size);
         this.mFabWindowManager = new FabWindowManager(context, this);
-        createMenuOne();
+        this.mHandler = new Handler();
+        this.mFabWindowManager.load();  //启动
     }
 
 
     // 创建菜单一：fabactionImgView，reportImgView，userImgView
     public void createMenuOne() {
+        if (this.mFabWindowManager.getFabBtn() != null) {
+            this.mFabWindowManager.getFabBtn().setImageResource(R.drawable.btg_btn_fab);
+        }
 
         this.mFabWindowManager.getFabMenu().removeAllItems();
 
@@ -61,31 +67,15 @@ public class FabManager {
             }
         });
         this.mFabWindowManager.getFabMenu().addMenuItem(userImgView, new ViewGroup.LayoutParams(itemSize, itemSize));
-
-
-        RelativeLayout fabAction = (RelativeLayout) LayoutInflater.from(mContext).inflate(R.layout.btg_view_fab_action, null);
-        ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(itemSize, itemSize);
-        fabAction.setOnClickListener(new View.OnClickListener() {
-            @RequiresApi(api = Build.VERSION_CODES.HONEYCOMB)
-            @Override
-            public void onClick(View view) {
-                //Toast.makeText(MainActivity.this, "fabAction", Toast.LENGTH_SHORT).show();
-                if (!isOpen) {
-                    mFabWindowManager.getFabMenu().launch();
-                } else {
-                    mFabWindowManager.getFabMenu().fold();
-                }
-
-                isOpen = (!isOpen);
-            }
-        });
-        this.mFabWindowManager.getFabMenu().addMenuItem(fabAction, layoutParams);
-
         mode = 0;
     }
 
     // 创建菜单二：fabaction2，tickImgView，crossImgView
     public void createMenuTwo() {
+        if (this.mFabWindowManager.getFabBtn() != null) {
+            this.mFabWindowManager.getFabBtn().setImageResource(R.drawable.btg_btn_publish);
+        }
+
         this.mFabWindowManager.getFabMenu().removeAllItems();
 
         ImageView tickImgView = new ImageView(mContext);
@@ -109,30 +99,69 @@ public class FabManager {
             }
         });
         this.mFabWindowManager.getFabMenu().addMenuItem(crossImgView, new ViewGroup.LayoutParams(itemSize, itemSize));
-
-
-        RelativeLayout fabAction = (RelativeLayout) LayoutInflater.from(mContext).inflate(R.layout.btg_view_fab_action, null);
-        ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(itemSize, itemSize);
-        ImageView fabBtnImgView = (ImageView) fabAction.findViewById(R.id.fabBtnImgView);
-        fabBtnImgView.setImageResource(R.drawable.btg_btn_publish);
-        fabAction.setOnClickListener(new View.OnClickListener() {
-            @RequiresApi(api = Build.VERSION_CODES.HONEYCOMB)
-            @Override
-            public void onClick(View view) {
-                //Toast.makeText(MainActivity.this, "fabAction", Toast.LENGTH_SHORT).show();
-                if (!isOpen) {
-                    mFabWindowManager.getFabMenu().launch();
-                } else {
-                    mFabWindowManager.getFabMenu().fold();
-                }
-
-                isOpen = (!isOpen);
-            }
-        });
-        this.mFabWindowManager.getFabMenu().addMenuItem(fabAction, layoutParams);
-
         mode = 1;
-
     }
 
+    // 点击FabWindowManager的透明背景触发，折叠FabMenu
+    public void onClose() {
+        foldRelated();
+    }
+
+    //折叠相关操作
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    private void foldRelated() {
+        if (this.isOpen) {
+            this.mFabWindowManager.getFabBgView().setVisibility(View.GONE);  // 透明背景消失
+            this.mHandler.removeCallbacksAndMessages(null);
+            this.mHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mFabWindowManager.getFabMenu().setVisibility(View.GONE); // fabMenu消失
+                }
+            }, 200);
+
+            mFabWindowManager.getFabMenu().fold();  // 折叠fabmenu
+
+            ObjectAnimator rotationAni = ObjectAnimator.ofFloat(this.mFabWindowManager.getFabBtn(),
+                    "rotation", 0.0f);
+            rotationAni.setDuration(100);
+            rotationAni.start();
+            this.isOpen = false;
+        }
+    }
+
+    //展开相关操作
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    private void openRelated() {
+        if (!this.isOpen) {
+            this.mFabWindowManager.getFabBgView().setVisibility(View.VISIBLE);  // 透明背景显示
+            this.mHandler.removeCallbacksAndMessages(null);
+            this.mFabWindowManager.getFabMenu().setVisibility(View.VISIBLE);    // fabmenu显示
+            this.mFabWindowManager.getFabMenu().launch();
+
+            float rotaAngle = this.mFabWindowManager.getDir() == 0 ? 45.0f : -135.0f;
+            ObjectAnimator rotationAni = ObjectAnimator.ofFloat(this.mFabWindowManager.getFabBtn(),
+                    "rotation", rotaAngle);
+            rotationAni.setDuration(300);
+            rotationAni.start();
+            this.isOpen = true;
+        }
+    }
+
+
+    public boolean isOpen() {
+        return isOpen;
+    }
+
+    public void setOpen(boolean open) {
+        isOpen = open;
+    }
+
+    public void toggle() {
+        if (isOpen) {
+            foldRelated();
+        } else {
+            openRelated();
+        }
+    }
 }
