@@ -15,8 +15,6 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 
-import java.lang.reflect.Field;
-
 import csmijo.com.floatmenu.R;
 
 /**
@@ -28,14 +26,6 @@ public class FabWindowManager {
     private WindowManager mWindowManager;
     private FabMenu mFabMenu;
     private FabManager mFabManager;
-
-    private float x1 = 0.0f;
-    private float y1 = 0.0f;
-    private float x2;
-    private float y3;
-    private float x3;
-    private long startTime;
-
 
     private View mFabBgView;  // 透明背景
     private RelativeLayout mFabActionRl;
@@ -137,36 +127,41 @@ public class FabWindowManager {
 
     private View.OnTouchListener getOnTouchListener() {
         return new View.OnTouchListener() {
+
+            int lastX, lastY;
+            int paramX, paramY;
+            long startTime;
+
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-
                 WindowManager.LayoutParams layoutParams = (WindowManager.LayoutParams) mFabActionRl.getLayoutParams();
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
-                        x1 = event.getX();
-                        y1 = event.getY();
+                        lastX = (int) event.getRawX();
+                        lastY = (int) event.getRawY();
+                        paramX = layoutParams.x;
+                        paramY = layoutParams.y;
                         startTime = System.currentTimeMillis();
                         break;
                     case MotionEvent.ACTION_MOVE:
-                        x2 = event.getRawX();
-                        float y2 = event.getRawY() - getStatusBarHeight();
-                        x3 = event.getX();
-                        y3 = event.getY();
+                        int dx = (int) (event.getRawX()) - lastX;
+                        int dy = (int) (event.getRawY()) - lastY;
 
-                        Log.i("FabWindowManager", "onTouch: x2 = " + x2 + "; y2 = " + y2);
                         // 改变位置
                         if (!mFabManager.isOpen()) {
-                            updatePosition((int) (x2 - x1), (int) (y2 - y1), layoutParams);
+                            updatePosition(paramX + dx, paramY + dy, layoutParams);
                             break;
                         }
                         break;
                     case MotionEvent.ACTION_UP:
+                        int x = (int) event.getRawX();
+                        int y = (int) event.getRawY();
 
                         if (!mFabManager.isOpen()) {
-                            updatePositionAndDir((int) x2, layoutParams);
+                            updatePositionAndDir(x, layoutParams);
                         }
 
-                        if (Math.abs(x3 - x1) < TOUCHSLOP && Math.abs(y3 - y1) < TOUCHSLOP
+                        if (Math.abs(x - lastX) < TOUCHSLOP && Math.abs(y - lastY) < TOUCHSLOP
                                 && (System.currentTimeMillis() - startTime) < CLICKSLOP) {
                             //点击
                             mFabManager.toggle();
@@ -180,30 +175,20 @@ public class FabWindowManager {
     }
 
     private void updatePositionAndDir(int x, WindowManager.LayoutParams params) {
-        Log.i("FabWindowManager", "updatePositionAndDir: x = " + x + "; screenWidth = " + getScreenWidth());
-        if (x < (getScreenWidth() / 2)) {
+        int width = getScreenWidth();
+        if (x < (width / 2)) {
             // 靠左
-         /*   params.x = 0;
-            mWindowManager.updateViewLayout(mFabActionRl, params);
-            dir = 0;
-            updateFabMenuPosition();*/
-
-            new MoveLeftTrail(params.x, 5, params).start();
+            new MoveLeftTrail(x - FABACTIONSIZE, 5, params).start();
         } else {
-           /* params.x = getScreenWidth() - FABACTIONSIZE;
-            mWindowManager.updateViewLayout(mFabActionRl, params);
-            dir = 1;
-            updateFabMenuPosition();*/
-            // bug!!!
-            new MoveRightTrail(params.x - (getScreenWidth() - FABACTIONSIZE), 5, params).start();
+            new MoveRightTrail(width - x - FABACTIONSIZE, 5, params).start();
         }
     }
 
 
     // 更新fabAction，FabMenu的位置
-    private void updatePosition(int dx, int dy, WindowManager.LayoutParams params) {
-        params.x = dx;
-        params.y = dy;
+    private void updatePosition(int x, int y, WindowManager.LayoutParams params) {
+        params.x = x;
+        params.y = y;
         this.mWindowManager.updateViewLayout(this.mFabActionRl, params);  // 更新fabAction的位置
         updateFabMenuPosition();
     }
@@ -225,27 +210,6 @@ public class FabWindowManager {
 
         this.mFabMenu.setExpandDir(this.dir);
         this.mWindowManager.updateViewLayout(this.mFabMenu, fabMenu_lp);
-    }
-
-    private int getStatusBarHeight() {
-        int statusBarHeight = 0;
-        try {
-            Class<?> c = Class.forName("com.android.internal.R$dimen");
-            Object o = c.newInstance();
-            Field field = c.getField("status_bar_height");
-            int x = (Integer) field.get(o);
-            statusBarHeight = mContext.getResources().getDimensionPixelSize(x);
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-
-        return statusBarHeight;
     }
 
     private int getScreenWidth() {
@@ -301,7 +265,7 @@ public class FabWindowManager {
             this.mLayoutParams.x = 0;
             mWindowManager.updateViewLayout(mFabActionRl, this.mLayoutParams);
             dir = 0;
-            updateFabMenuPosition();  //
+            updateFabMenuPosition();
         }
     }
 
@@ -324,7 +288,7 @@ public class FabWindowManager {
 
         @Override
         public void onTick(long millisUntilFinished) {
-            this.mLayoutParams.x = (int) millisUntilFinished;
+            this.mLayoutParams.x = getScreenWidth() - FABACTIONSIZE - (int) millisUntilFinished;
             mWindowManager.updateViewLayout(mFabActionRl, mLayoutParams);
         }
 
