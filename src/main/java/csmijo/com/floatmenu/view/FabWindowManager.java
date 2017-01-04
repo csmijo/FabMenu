@@ -57,6 +57,12 @@ public class FabWindowManager {
         updateFabMenuPosition();
     }
 
+    public void clearViews() {
+        this.mWindowManager.removeView(mFabBgView);
+        this.mWindowManager.removeView(mFabMenu);
+        this.mWindowManager.removeView(mFabActionRl);
+    }
+
     // 加载透明背景
     private void loadFabBg(boolean flag) {
         if (flag || mFabBgView == null) {

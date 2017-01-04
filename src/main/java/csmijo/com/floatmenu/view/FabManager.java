@@ -32,7 +32,7 @@ public class FabManager {
         this.itemSize = mContext.getResources().getDimensionPixelSize(R.dimen.btg_fab_menu_item_size);
         this.mFabWindowManager = new FabWindowManager(context, this);
         this.mHandler = new Handler();
-        this.mFabWindowManager.load();  //启动
+
     }
 
 
@@ -146,6 +146,14 @@ public class FabManager {
             rotationAni.start();
             this.isOpen = true;
         }
+    }
+
+    public void startFabMenu(){
+        this.mFabWindowManager.load();  //启动创建悬浮窗
+    }
+
+    public void stopFabMenu() {
+        this.mFabWindowManager.clearViews();     //关闭悬浮窗
     }
 
 

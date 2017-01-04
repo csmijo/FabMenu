@@ -4,7 +4,6 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.view.View;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 
 /**
@@ -57,10 +56,9 @@ public class FabMenuApi9 extends FabMenu {
 
         Iterator<View> it;
         int left;
-        ArrayList<View> list = reArrange(this.mViewList);
         if (this.expandDir == 1) {
             measuredWidth -= menuBaseSize;
-            it = list.iterator();
+            it = mViewList.iterator();
             left = measuredWidth;
             while (it.hasNext()) {
                 View view = it.next();
@@ -71,7 +69,7 @@ public class FabMenuApi9 extends FabMenu {
                 left -= (menuItemSpacing + measuredWith2);
             }
         } else if (this.expandDir == 0) {
-            it = list.iterator();
+            it = mViewList.iterator();
             left = 0;
             while (it.hasNext()) {
                 View view = it.next();
@@ -82,16 +80,5 @@ public class FabMenuApi9 extends FabMenu {
                 left += (menuItemSpacing + measuredWidth2);
             }
         }
-    }
-
-    private ArrayList<View> reArrange(ArrayList<View> list) {
-        ArrayList<View> tList = new ArrayList<>();
-
-        int size = list.size();
-        tList.add(list.get(size - 1));
-        for (int i = 0; i < size - 1; i++) {
-            tList.add(list.get(i));
-        }
-        return tList;
     }
 }
